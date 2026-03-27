@@ -1,9 +1,0 @@
-{
-  "manifest_version": 3,
-  "name": "Anti-Cuai Extension",
-  "version": "1.0",
-  "description": "A simple Chrome extension that shows Hello World",
-  "action": {
-    "default_popup": "landingPage.html"
-  }
-}
