@@ -9,3 +9,4 @@ langserve
 sse-starlette
 pydantic
 python-dotenv
+selenium
