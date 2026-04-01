@@ -1,11 +1,31 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [dataFetchedFromAPI, setDataFetchedFromAPIData] = useState("default");
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/");
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const data: { message: string } = await response.json();
+        setDataFetchedFromAPIData(data.message);
+        console.log(data.message);
+      } catch (error) {
+        console.error("Error calling API:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <>
@@ -16,7 +36,7 @@ function App() {
           <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
         <div>
-          <h1>Get started</h1>
+          <h1>{dataFetchedFromAPI}</h1>
           <p>
             Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
           </p>

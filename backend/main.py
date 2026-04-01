@@ -1,6 +1,37 @@
+import os
 from fastapi import FastAPI
-import selenium_service
+from pydantic import BaseModel
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage
+from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
 app = FastAPI()
+
+# Allow your frontend origin
+origins = [
+    "http://localhost:5173",  # your React dev server
+    "http://127.0.0.1:5173"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,        # or ["*"] for all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Initialize the Google Gemini model
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    google_api_key=os.getenv("GOOGLE_API_KEY"),
+    temperature=0.7
+)
+
+class PromptRequest(BaseModel):
+    prompt: str
 
 # Root endpoint
 @app.get("/")
@@ -28,7 +59,22 @@ def get_item(email: str):
 
 # Phishing Detection Endpoint
 @app.post("/api/check/phishing")
-def create_item(sentence: str):
+def check_phishing(sentence: str):
     return {
         "result": True
     }
+
+@app.post("/api/chat")
+async def chat(request: PromptRequest):
+    try:
+        response = llm.invoke([
+            HumanMessage(content=request.prompt)
+        ])
+
+        return {
+            "input": request.prompt,
+            "response": response.content
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
