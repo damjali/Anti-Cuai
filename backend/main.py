@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+import selenium_service
 app = FastAPI()
 
 # Root endpoint
