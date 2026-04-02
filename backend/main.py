@@ -1,6 +1,8 @@
+import json
 import os
 import requests
-from fastapi import FastAPI, HTTPException
+import re
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -42,6 +44,10 @@ class PromptRequest(BaseModel):
 class PhishingRequest(BaseModel):
     url: str
 
+class EmailRequest(BaseModel):
+    subject: str
+    body: str
+
 # Root endpoint
 @app.get("/")
 def read_root():
@@ -73,9 +79,13 @@ def check_email(email: str):
 
 }
 
+#=========================================================================================================================================================================
+# Adam's API ENDPOINT
+# ========================================================================================================================================================================
+
 @app.post("/api/check/phishing")
 def check_phishing(request: PhishingRequest):
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("GOOGLE_API_KEY_SAFE_BROWSING")
     
     if not api_key:
         raise HTTPException(status_code=500, detail="Google API Key not configured")
@@ -152,6 +162,53 @@ def check_phishing(request: PhishingRequest):
             "error_code": status_code,
             "message": f"Security check failed: {str(e)}"
         }
+    
+@app.get("/api/check/email")
+async def check_email_phishing_get(
+    email_text: str = Query(..., description="The full email content (Subject + Body)")
+):
+    # Strict prompt to force Gemini to output ONLY valid JSON
+    system_prompt = (
+        "You are a cybersecurity expert. Analyze the provided email text. "
+        "Return ONLY a JSON object with these keys: "
+        "'is_phishing' (boolean), 'confidence' (float 0-1), 'risk_level' (string: Low, Medium, High, Critical), "
+        "and 'reason' (string). Do not include markdown formatting or extra text."
+    )
+    
+    try:
+        # 1. Get AI Analysis
+        response = llm.invoke([
+            HumanMessage(content=f"{system_prompt}\n\nEmail Text:\n{email_text}")
+        ])
+        
+        # Clean the response in case Gemini adds ```json ... ``` blocks
+        clean_content = response.content.replace("```json", "").replace("```", "").strip()
+        analysis_data = json.loads(clean_content)
+
+        # 2. Extract links (Technical layer)
+        links = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][2-9a-fA-F]))+', email_text)
+
+        # 3. Final structured return
+        return {
+            "is_phishing": analysis_data.get("is_phishing", False),
+            "confidence": analysis_data.get("confidence", 0),
+            "risk_level": analysis_data.get("risk_level", "Unknown"),
+            "reason": analysis_data.get("reason", "No analysis available."),
+            "links_found": links,
+            "raw_text_length": len(email_text)
+        }
+
+    except json.JSONDecodeError:
+        # Fallback if AI doesn't return perfect JSON
+        return {
+            "is_phishing": "Caution" in response.content or "Warning" in response.content,
+            "confidence": 0.5,
+            "risk_level": "Manual Review Required",
+            "reason": response.content,
+            "links_found": []
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 @app.post("/api/chat")
 async def chat(request: PromptRequest):
