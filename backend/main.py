@@ -57,19 +57,22 @@ def check_phone_num(number: str):
         return {"error": str(e)}
 
 
-@app.get("/api/check/bank_number/{number}")
+@app.get("/api/check/bank_number/{bankNum}")
 def check_bank_num(bankNum: str):
-    return {
-        "bank_number": bankNum
-    }
+    try:
+        result = selenium_service.check_account_no(bankNum)
+        return result
+    except Exception as e:
+        return {"error": str(e)}
 
-@app.get("/api/check/email/{email}")
-def check_email(email: str):
-    return {
-        "email": email
+@app.get("/api/check/company_name/{companyName}")
+def check_company_name(companyName: str):
+    try:
+        result = selenium_service.check_company_name(companyName)
+        return result
+    except Exception as e:
+        return {"error": str(e)}
 
-
-}
 
 @app.post("/api/check/phishing")
 def check_phishing(request: PhishingRequest):
