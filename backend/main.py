@@ -23,9 +23,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the Google Gemini model
+# 1. FIXED: Updated to a currently supported model
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
+    model="gemini-2.5-flash", 
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0.7
 )
@@ -38,21 +38,21 @@ class PromptRequest(BaseModel):
 def read_root():
     return {"message": "Hello World 🚀"}
 
-# SemakMule Endpoint
-@app.get("/api/check/phone_number/{number}")
-def get_item(phoneNum: int):
+# 2. FIXED: Matched path parameters and gave unique function names
+@app.get("/api/check/phone_number/{phoneNum}")
+def check_phone_number(phoneNum: int):
     return {
         "phone_number": phoneNum
     }
 
-@app.get("/api/check/bank_number/{number}")
-def get_item(bankNum: int):
+@app.get("/api/check/bank_number/{bankNum}")
+def check_bank_number(bankNum: int):
     return {
         "bank_number": bankNum
     }
 
 @app.get("/api/check/email/{email}")
-def get_item(email: str):
+def check_email(email: str):
     return {
         "email": email
     }
