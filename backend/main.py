@@ -6,6 +6,10 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 from fastapi.middleware.cors import CORSMiddleware
+import selenium_service
+import uvicorn
+
+
 
 load_dotenv()
 app = FastAPI()
@@ -43,15 +47,20 @@ class PhishingRequest(BaseModel):
 def read_root():
     return {"message": "Hello World 🚀"}
 
-# 2. FIXED: Matched path parameters and gave unique function names
-@app.get("/api/check/phone_number/{phoneNum}")
-def check_phone_number(phoneNum: int):
-    return {
-        "phone_number": phoneNum
-    }
+# SemakMule Endpoint
+@app.get("/api/check/phone_number/{number}")
+def check_phone_num(number: str):
+    try:
+        result = selenium_service.check_phone_number(number)
+        return {
+            "result": result
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
-@app.get("/api/check/bank_number/{bankNum}")
-def check_bank_number(bankNum: int):
+
+@app.get("/api/check/bank_number/{number}")
+def check_bank_num(bankNum: str):
     return {
         "bank_number": bankNum
     }
@@ -158,3 +167,8 @@ async def chat(request: PromptRequest):
 
     except Exception as e:
         return {"error": str(e)}
+
+
+if __name__ == "__main__":
+    # This matches your terminal command but lives inside your code
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
