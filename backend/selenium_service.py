@@ -20,31 +20,33 @@ service  = Service(executable_path=driver_path)
 chrome_options = Options()
 chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
-
+driver = webdriver.Chrome(service=service, options=chrome_options)
+driver.get("https://semakmule.rmp.gov.my/")
 
 def check_email(email):
     return None
 def check_phone_number(number):
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    driver.get("https://semakmule.rmp.gov.my/")
 
-    dropdown_element = __get_element(By.XPATH, "//div[contains(text(), 'No Akaun Bank')]", driver)
+    dropdown_element = __get_element(By.XPATH, "//div[contains(@role, 'combobox')]")
     __click_element(dropdown_element)
 
-    choose_phone_element = __get_element(By.XPATH, "//li[contains(@data-value, 'telefon')]", driver)
+    choose_phone_element = __get_element(By.XPATH, "//li[contains(@data-value, 'telefon')]")
     __click_element(choose_phone_element)
 
-    input_element = __get_element(By.XPATH, "//input[contains(@placeholder, 'Masukkan No Telefon')]", driver)
+    input_element = __get_element(By.XPATH, "//input[contains(@placeholder, 'Masukkan No Telefon')]")
     __safe_input(number, input_element)
 
-    semak_button = __get_element(By.XPATH, "//button[contains(text(), 'Semak')]", driver)
+    semak_button = __get_element(By.XPATH, "//button[contains(text(), 'Semak')]")
     __click_element(semak_button)
 
-    result = __get_result(number, driver)
-    driver.quit()
+    result = __get_result(number)
+
+    close_button = __get_element(By.XPATH, "//button[img[@class='ReportCheckDialog_closeIcon__WvekQ']] ")
+    __click_element(close_button)
+
 
     if result is None:
-        print("No result")
+        print("No result found on " + number)
         return False
     else:
         print("Result found on " + number)
@@ -60,7 +62,7 @@ def __safe_input(text, element):
 
     element.send_keys(text)
 
-def __get_element(by, path, driver):
+def __get_element(by, path):
     try:
         return WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((by, path)))
@@ -68,18 +70,17 @@ def __get_element(by, path, driver):
         return None
 
 def __click_element(element):
-    time.sleep(0.5)
     element.click()
 
-def __get_result(key, driver):
+def __get_result(key):
     resultPath = "//tr[td[1][text() = '{}']]".format(key)
     noResultPath = "//p[contains(text(), 'Tiada Rekod Ditemui')]"
     RESULT = "result"
     RESULTNOTFOUND = "resultnotfound"
 
     future_to_task = {
-        executor.submit(__get_element, By.XPATH, resultPath, driver): RESULT,
-        executor.submit(__get_element, By.XPATH, noResultPath, driver): RESULTNOTFOUND
+        executor.submit(__get_element, By.XPATH, resultPath): RESULT,
+        executor.submit(__get_element, By.XPATH, noResultPath): RESULTNOTFOUND
     }
 
     for future in as_completed(future_to_task):
@@ -90,6 +91,6 @@ def __get_result(key, driver):
         else:
             return result
 
-
 if __name__ == "__main__":
     check_phone_number("1111")
+    check_phone_number("1234")
