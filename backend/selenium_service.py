@@ -47,10 +47,15 @@ def check_phone_number(number):
 
     if result is None:
         print("No result found on " + number)
-        return False
+        return {
+            "scam" : False
+        }
     else:
-        print("Result found on " + number)
-        return True
+        print("Result found on " + number + " with " + result + " report")
+        return {
+            "scam" : True,
+            "report_count" : result
+        }
 
 
 def __safe_input(text, element):
@@ -89,7 +94,7 @@ def __get_result(key):
         if task_name == RESULTNOTFOUND and result is not None:
             return None
         else:
-            return result
+            return  result.find_element(By.XPATH, "./td[2]").text
 
 if __name__ == "__main__":
     check_phone_number("1111")

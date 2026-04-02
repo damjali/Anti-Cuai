@@ -52,9 +52,7 @@ def read_root():
 def check_phone_num(number: str):
     try:
         result = selenium_service.check_phone_number(number)
-        return {
-            "result": result
-        }
+        return result
     except Exception as e:
         return {"error": str(e)}
 
