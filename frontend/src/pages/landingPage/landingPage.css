@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #f4faff;
+}
+
+.container {
+  width: 320px;
+  padding: 20px;
+  text-align: center;
+  background: linear-gradient(145deg, #ffffff, #e6f2ff);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 140, 255, 0.1);
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  color: #007bff;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.featureItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.featureItem:hover {
+  transform: scale(1.02);
+}
+
+.toggle {
+  width: 38px;
+  height: 20px;
+  border-radius: 20px;
+  background: #ccc;
+  position: relative;
+  transition: 0.3s;
+}
+
+.toggle.active {
+  background: #4da6ff;
+}
+
+.circle {
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: 0.3s;
+}
+
+.toggle.active .circle {
+  left: 20px;
+}
+
+.saveBtn {
+  margin-top: 15px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.saveBtn:hover {
+  background: #005ecb;
+}
