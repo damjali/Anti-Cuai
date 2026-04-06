@@ -1,15 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
+
+declare const chrome: any; 
 
 function App() {
   // Master Toggles
   const [linkDetection, setLinkDetection] = useState(true);
   const [scamHighlight, setScamHighlight] = useState(true);
 
-  // Sub-Toggles (Your new idea!)
+  // Sub-Toggles
   const [checkPhone, setCheckPhone] = useState(true);
-  const [checkEmail, setCheckEmail] = useState(false); // Maybe off by default to save speed
+  const [checkEmail, setCheckEmail] = useState(false); 
   const [checkBank, setCheckBank] = useState(true);
+
+  // 1. LOAD: Fetch all settings from Chrome Storage on component mount
+  useEffect(() => {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.get(
+        ['linkDetection', 'scamHighlight', 'checkPhone', 'checkEmail', 'checkBank'], 
+        (res: any) => {
+          if (res.linkDetection !== undefined) setLinkDetection(res.linkDetection);
+          if (res.scamHighlight !== undefined) setScamHighlight(res.scamHighlight);
+          if (res.checkPhone !== undefined) setCheckPhone(res.checkPhone);
+          if (res.checkEmail !== undefined) setCheckEmail(res.checkEmail);
+          if (res.checkBank !== undefined) setCheckBank(res.checkBank);
+        }
+      );
+    }
+  }, []);
+
+  // 2. SAVE: Automatically sync to Chrome Storage whenever any state changes
+  useEffect(() => {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
+      chrome.storage.local.set({
+        linkDetection,
+        scamHighlight,
+        checkPhone,
+        checkEmail,
+        checkBank
+      });
+    }
+  }, [linkDetection, scamHighlight, checkPhone, checkEmail, checkBank]);
 
   return (
     <div className="w-[350px] min-h-[450px] bg-[#12122b] flex flex-col font-sans text-white">
@@ -54,12 +85,11 @@ function App() {
             </button>
           </div>
 
-          {/* THE NEW SUB-TOGGLES MENU */}
+          {/* Sub-Toggles Menu */}
           {scamHighlight && (
             <div className="mt-4 pt-4 border-t border-[#3e3e5c] flex flex-col gap-3">
               <p className="text-[10px] uppercase tracking-wider text-[#9a78ec] font-bold">What to scan:</p>
               
-              {/* Phone Sub-Toggle */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-[#d0d0d0]">📱 Phone Numbers</span>
                 <input 
@@ -70,7 +100,6 @@ function App() {
                 />
               </div>
 
-              {/* Email Sub-Toggle */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-[#d0d0d0]">📧 Email Addresses</span>
                 <input 
@@ -81,7 +110,6 @@ function App() {
                 />
               </div>
 
-              {/* Bank Sub-Toggle */}
               <div className="flex justify-between items-center">
                 <span className="text-sm text-[#d0d0d0]">💳 Bank Accounts</span>
                 <input 

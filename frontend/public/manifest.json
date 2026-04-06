@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Anti-Cuai",
   "version": "1.0.0",
-  "description": "Cross-checks suspicious numbers and links with SemakMule.",
+  "description": "Cross-checks suspicious numbers and links with SemakMule and Safe Browsing.",
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",
@@ -18,8 +18,14 @@
     "scripting",
     "storage"
   ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*"
   ],
   "content_scripts": [
     {

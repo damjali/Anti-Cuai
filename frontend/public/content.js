@@ -1,70 +1,53 @@
-// public/content.js
+/**
+ * content.js
+ * This script runs in the context of the web page but cannot 
+ * directly call local APIs due to Private Network Access restrictions.
+ */
 
-console.log("🛡️ Anti-Cuai Content Script is running!");
+(function() {
+    // 1. Identify the URL or data you want to check
+    const currentUrl = window.location.href;
 
-// Simple regex to find Malaysian phone numbers (e.g., 012-3456789 or 0123456789)
-const phoneRegex = /(01\d{1}-?\d{7,8})/g;
+    console.log("Anti-Cuai content script active. Checking:", currentUrl);
 
-// Function to scan the webpage text
-function scanPageForNumbers() {
-    // Get all text on the website
-    const bodyText = document.body.innerHTML;
-    
-    // Check if there are phone numbers
-    const foundNumbers = bodyText.match(phoneRegex);
-    
-    if (foundNumbers) {
-        // Remove duplicates
-        const uniqueNumbers = [...new Set(foundNumbers)];
-        console.log("Found numbers to check:", uniqueNumbers);
-        
-        // Loop through each number and send it to your backend
-        uniqueNumbers.forEach(number => {
-            checkNumberWithBackend(number);
-        });
-    }
-}
+    // 2. Send a message to the background.js service worker
+    // Instead of fetching directly, we ask the extension background to do it.
+    chrome.runtime.sendMessage(
+        { 
+            action: "checkPhishing", 
+            url: currentUrl 
+        }, 
+        (response) => {
+            // Check for connection errors between content and background
+            if (chrome.runtime.lastError) {
+                console.error("Anti-Cuai communication error:", chrome.runtime.lastError.message);
+                return;
+            }
 
-// Function to talk to Hazim/Adam's FastAPI (Assume it runs on localhost:8000 for now)
-async function checkNumberWithBackend(number) {
-    try {
-        // Replace with actual FastAPI endpoint later
-        const response = await fetch('http://127.0.0.1:8000/check-scam', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone_number: number })
-        });
-        
-        const data = await response.json();
-        
-        // If the backend says it's a scam, pass the number AND the report count to the UI
-        if (data.is_scam) {
-            highlightScamOnPage(number, data.report_count);
+            // 3. Handle the response sent back from background.js
+            if (response && response.success) {
+                handleApiResponse(response.data);
+            } else {
+                console.error("Anti-Cuai backend error:", response.error);
+            }
         }
-    } catch (error) {
-        console.error("Failed to connect to backend", error);
+    );
+})();
+
+/**
+ * Handle the UI logic based on the API verdict
+ */
+function handleApiResponse(data) {
+    console.log("Anti-Cuai Verdict Received:", data);
+    
+    // Example logic: if the API returns that it's phishing, alert the user
+    if (data.is_phishing || data.status === "suspicious") {
+        alert("⚠️ WARNING: Anti-Cuai has detected this site as potentially unsafe!");
+        
+        // You could also inject a warning banner into the DOM here
+        const banner = document.createElement('div');
+        banner.style.cssText = "position:fixed; top:0; left:0; width:100%; background:red; color:white; text-align:center; z-index:9999; padding:10px; font-weight:bold;";
+        banner.innerText = "SECURITY WARNING: This site is flagged as a phishing risk.";
+        document.body.prepend(banner);
     }
 }
-
-// The visually cool part: Injecting the warning next to the number
-function highlightScamOnPage(scamNumber, reportCount) {
-    // Find where the number is on the page
-    const regex = new RegExp(scamNumber, 'g');
-    
-    // We create a custom HTML badge that replaces the plain text number
-    // This adds the highly visible red pill showing the total police reports
-    const warningHTML = `
-        <span style="background-color: #ffe6e6; border: 1px dashed #cc0000; padding: 2px 6px; border-radius: 4px; color: #cc0000; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
-            🚨 ${scamNumber} 
-            <span style="background-color: #cc0000; color: white; padding: 2px 6px; border-radius: 12px; font-size: 11px; margin-left: 4px; box-shadow: 0 2px 4px rgba(204,0,0,0.4);">
-                ${reportCount} Police Reports!
-            </span>
-        </span>
-    `;
-    
-    // Inject the badge into the website's DOM
-    document.body.innerHTML = document.body.innerHTML.replace(regex, warningHTML);
-}
-
-// Run the scan 2 seconds after the page loads to give the website time to render
-setTimeout(scanPageForNumbers, 2000);
