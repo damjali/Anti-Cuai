@@ -1,13 +1,13 @@
-import { getURL } from "./essentialsScraping";
-import {url} from "../types/url"
+// import { getURL } from "./essentialsScraping";
+// import {url} from "../types/url"
 
-export function analyzeLink() : string{
+// export function analyzeLink() : string{
 
-    try {
-        const URL = getURL();
+//     try {
+//         const URL = getURL();
         
         
-    } catch (error) {
+//     } catch (error) {
         
-    }
-}
+//     }
+// }
