@@ -68,7 +68,7 @@ def __safe_input(text, element):
 
 def __get_element(by, path):
     try:
-        return WebDriverWait(driver, 10).until(
+        return WebDriverWait(driver, 100).until(
         EC.presence_of_element_located((by, path)))
     except TimeoutException:
         return None
