@@ -16,8 +16,8 @@ driver_path = os.path.join(BASE_DIR, "chromedriver.exe")
 
 service  = Service(executable_path=driver_path)
 chrome_options = Options()
-chrome_options.add_argument("--headless=new")
-chrome_options.add_argument("--disable-gpu")
+# chrome_options.add_argument("--headless=new")
+# chrome_options.add_argument("--disable-gpu")
 driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.get("https://semakmule.rmp.gov.my/")
 
