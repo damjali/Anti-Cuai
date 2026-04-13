@@ -1,3 +1,4 @@
 .dockerignore
 Dockerfile
 full-requirements.txt
+chromedriver
