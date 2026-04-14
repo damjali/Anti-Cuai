@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Anti-Cuai",
+  "version": "1.0.0",
+  "description": "Cross-checks suspicious numbers and links with SemakMule and Safe Browsing.",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Open Anti-Cuai",
+    "default_icon": "icon-48.png"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "host_permissions": [
+    "<all_urls>",
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

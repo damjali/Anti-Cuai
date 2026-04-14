@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./landingPage.css";
+import "../../scripts/linkDetection"
 
 type FeatureKey =
   | "scamLink"

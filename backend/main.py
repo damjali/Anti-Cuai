@@ -2,7 +2,7 @@ import json
 import os
 import requests
 import re
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -11,26 +11,39 @@ from fastapi.middleware.cors import CORSMiddleware
 import selenium_service
 import uvicorn
 
-
-
 load_dotenv()
 app = FastAPI()
 
-# Allow your frontend origin
-origins = [
-    "http://localhost:5173",  # your React dev server
-    "http://127.0.0.1:5173"
-]
-
+# 1. Standard CORS Middleware (Allows all origins for dev)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,        # or ["*"] for all origins
+    allow_origins=["*"],        # Allows google.com, your extension, and React
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 1. FIXED: Updated to a currently supported model
+# 2. Chrome Private Network Access (PNA) Bypass Middleware
+@app.middleware("http")
+async def add_pna_header(request: Request, call_next):
+    # Handle the Preflight OPTIONS request from Chrome
+    if request.method == "OPTIONS":
+        response = Response()
+        response.headers["Access-Control-Allow-Private-Network"] = "true"
+        response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        return response
+        
+    # Handle the actual POST/GET request
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Private-Network"] = "true"
+    # Ensure the origin is echoed back correctly for CORS
+    if "origin" in request.headers:
+        response.headers["Access-Control-Allow-Origin"] = request.headers["origin"]
+    return response
+
+# FIXED: Updated to a currently supported model
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash", 
     google_api_key=os.getenv("GOOGLE_API_KEY"),
@@ -53,6 +66,13 @@ class EmailRequest(BaseModel):
 def read_root():
     return {"message": "Hello World 🚀"}
 
+@app.middleware("http")
+async def add_pna_header(request: Request, call_next):
+    response = await call_next(request)
+    # Add the missing PNA header
+    response.headers["Access-Control-Allow-Private-Network"] = "true"
+    return response
+
 # SemakMule Endpoint
 @app.get("/api/check/phone_number/{number}")
 def check_phone_num(number: str):
@@ -61,7 +81,6 @@ def check_phone_num(number: str):
         return result
     except Exception as e:
         return {"error": str(e)}
-
 
 @app.get("/api/check/bank_number/{bankNum}")
 def check_bank_num(bankNum: str):
@@ -78,7 +97,6 @@ def check_company_name(companyName: str):
         return result
     except Exception as e:
         return {"error": str(e)}
-
 
 #=========================================================================================================================================================================
 # Adam's API ENDPOINT
@@ -225,7 +243,6 @@ async def chat(request: PromptRequest):
 
     except Exception as e:
         return {"error": str(e)}
-
 
 if __name__ == "__main__":
     # This matches your terminal command but lives inside your code
