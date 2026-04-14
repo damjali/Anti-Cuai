@@ -2,3 +2,4 @@
 Dockerfile
 full-requirements.txt
 chromedriver
+.env

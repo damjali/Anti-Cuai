@@ -13,11 +13,14 @@ executor = ThreadPoolExecutor(max_workers=2)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 driver_path = os.path.join(BASE_DIR, "chromedriver.exe")
+# driver_path = os.path.join(BASE_DIR, "chromedriver")
 
 service  = Service(executable_path=driver_path)
 chrome_options = Options()
 chrome_options.add_argument("--headless=new")
-chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--disable-gpu") # Still helpful for some environments
+chrome_options.add_argument("--no-sandbox")   # CRITICAL for Linux/Docker
+chrome_options.add_argument("--disable-dev-shm-usage")
 driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.get("https://semakmule.rmp.gov.my/")
 
@@ -43,17 +46,21 @@ def check_phone_number(number):
 
 def __do_check(data, check_type):
 
-    dropdown_element = __get_element(By.XPATH, "//div[contains(@role, 'combobox')]")
-    __click_element(dropdown_element)
+    try:
+        close_button = __get_element_by_timeout(By.XPATH, "//button[img[@class='ReportCheckDialog_closeIcon__WvekQ']] ", 2)
+        __click_element(close_button)
+    finally:
+        dropdown_element = __get_element(By.XPATH, "//div[contains(@role, 'combobox')]")
+        __click_element(dropdown_element)
 
-    choose_phone_element = __get_element(By.XPATH, "//li[contains(@data-value,'" + check_type + "')]")
-    __click_element(choose_phone_element)
+        choose_phone_element = __get_element(By.XPATH, "//li[contains(@data-value,'" + check_type + "')]")
+        __click_element(choose_phone_element)
 
-    input_element = __get_element(By.XPATH, "//*[@id=':r5:']")
-    __safe_input(data, input_element)
+        input_element = __get_element(By.XPATH, "//*[@id=':r5:']")
+        __safe_input(data, input_element)
 
-    semak_button = __get_element(By.XPATH, "//button[contains(text(), 'Semak')]")
-    __click_element(semak_button)
+        semak_button = __get_element(By.XPATH, "//button[contains(text(), 'Semak')]")
+        __click_element(semak_button)
 
 
 def __safe_input(text, element):
@@ -68,7 +75,13 @@ def __safe_input(text, element):
 
 def __get_element(by, path):
     try:
-        return WebDriverWait(driver, 10).until(
+        return __get_element_by_timeout(by, path, 10)
+    except TimeoutException:
+        return None
+
+def __get_element_by_timeout(by, path, timeout):
+    try:
+        return WebDriverWait(driver, timeout).until(
         EC.presence_of_element_located((by, path)))
     except TimeoutException:
         return None
